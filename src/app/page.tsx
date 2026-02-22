@@ -34,6 +34,8 @@ const TwitterIcon = (
   </svg>
 );
 
+const BASE_PATH = "/norby-tactical-operator-base";
+
 export default function Home() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -136,7 +138,7 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.3 }}
           >
             <div className="relative h-[550px] w-auto overflow-hidden border-x border-t border-amber-500/20 bg-[#0a0a0a] lg:h-[700px] shadow-[0_-20px_50px_-12px_rgba(245,158,11,0.1)]">
-              <img src="/operator.png" alt="Tactical Operator" className="h-full w-auto object-contain opacity-90 brightness-[0.8] contrast-[1.1] grayscale-[0.1]" />
+              <img src={BASE_PATH + "/operator.png"} alt="Tactical Operator" className="h-full w-auto object-contain opacity-90 brightness-[0.8] contrast-[1.1] grayscale-[0.1]" />
               <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-tactical-dark to-transparent" />
               <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
                 <div className="h-[2px] w-full bg-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.8)] animate-scanline-fast" />
@@ -167,7 +169,7 @@ export default function Home() {
 
             <div className="relative border border-amber-500/20 overflow-hidden bg-black aspect-video flex items-center justify-center">
               <img
-                src="/operator_face.jpg"
+                src={BASE_PATH + "/operator_face.jpg"}
                 alt="Norby Face"
                 className="h-full w-full object-cover object-[center_15%] grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
               />
@@ -283,7 +285,7 @@ export default function Home() {
             <div className="absolute -inset-1 bg-amber-500/20 blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
             <div className="relative border border-amber-500/20 overflow-hidden bg-black aspect-[4/5] sm:aspect-square flex items-center justify-center">
               <img
-                src="/pc_rig_iqos.jpg"
+                src={BASE_PATH + "/pc_rig_iqos.jpg"}
                 alt="PC Rig with IQOS"
                 className="w-full h-full object-cover object-bottom grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
               />

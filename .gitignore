@@ -18,7 +18,15 @@
 /out/
 
 # production
+/out
 /build
+
+# Agent/AI folders
+.agent/
+.gemini/
+.antigravity/
+.agent_storage/
+.agent_logs/
 
 # misc
 .DS_Store

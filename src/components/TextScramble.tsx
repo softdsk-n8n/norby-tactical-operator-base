@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 const CHARS = "█▓▒░!@#$%^&*()_+-={}[]|;:<>?/~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -24,6 +25,7 @@ export default function TextScramble({
 }: TextScrambleProps) {
     const [displayText, setDisplayText] = useState("");
     const [isComplete, setIsComplete] = useState(false);
+    const { playTyping } = useSound();
 
     const scramble = useCallback(() => {
         const totalFrames = Math.floor(duration / 30);
@@ -31,6 +33,8 @@ export default function TextScramble({
 
         const interval = setInterval(() => {
             frame++;
+            if (frame % 2 === 0) playTyping(); // Play typing sound every ~60ms
+
             const progress = frame / totalFrames;
 
             const result = text
@@ -53,7 +57,7 @@ export default function TextScramble({
         }, 30);
 
         return () => clearInterval(interval);
-    }, [text, duration]);
+    }, [text, duration, playTyping]);
 
     useEffect(() => {
         const timeout = setTimeout(scramble, delay);

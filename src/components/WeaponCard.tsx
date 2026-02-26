@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 interface WeaponCardProps {
     name: string;
@@ -11,9 +12,12 @@ interface WeaponCardProps {
 }
 
 export default function WeaponCard({ name, type, stats, image, delay = 0 }: WeaponCardProps) {
+    const { playHover } = useSound();
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
+            onMouseEnter={playHover}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay }}

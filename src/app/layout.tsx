@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import NoiseOverlay from "@/components/NoiseOverlay";
 import ThermalToggle from "@/components/ThermalToggle";
+import { SoundProvider } from "@/context/SoundContext";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
@@ -25,9 +26,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${jetbrainsMono.variable} font-mono antialiased`}>
-        <NoiseOverlay />
-        <ThermalToggle />
-        {children}
+        <SoundProvider>
+          <NoiseOverlay />
+          <ThermalToggle />
+          {children}
+        </SoundProvider>
       </body>
     </html>
   );

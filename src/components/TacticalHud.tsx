@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 export default function TacticalHud() {
+    const { isMuted, toggleMute, playHover } = useSound();
     return (
         <div className="pointer-events-none fixed inset-0 z-20 hidden overflow-hidden lg:block">
             {/* Top Left: System Info */}
@@ -13,10 +15,18 @@ export default function TacticalHud() {
             </div>
 
             {/* Top Right: Time/Region */}
-            <div className="absolute right-20 top-20 font-mono text-[9px] uppercase tracking-tighter text-amber-500/30 text-right">
+            <div className="absolute right-20 top-20 flex flex-col items-end font-mono text-[9px] uppercase tracking-tighter text-amber-500/30 text-right">
                 <p>region: camona_farm</p>
                 <p>local_time: {new Date().toLocaleTimeString()}</p>
                 <p>ping: 24ms</p>
+
+                <button
+                    onClick={toggleMute}
+                    onMouseEnter={playHover}
+                    className="pointer-events-auto mt-3 border border-amber-500/30 bg-[#0f0f0f]/80 px-2 py-1 text-amber-500 transition-colors hover:border-amber-400 hover:bg-amber-500/20"
+                >
+                    [ COMMS: {isMuted ? "OFF (MUTED)" : "ON (ACTIVE)"} ]
+                </button>
             </div>
 
             {/* Bottom Left: Coordinates (Dynamic) */}

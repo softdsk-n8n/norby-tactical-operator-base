@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 interface VideoCardProps {
     index: number;
@@ -12,6 +13,7 @@ interface VideoCardProps {
 
 export default function VideoCard({ index, delay = 0, title, url, thumbnailId }: VideoCardProps) {
     const padded = String(index).padStart(2, "0");
+    const { playHover, playClick } = useSound();
 
     return (
         <motion.div
@@ -20,7 +22,11 @@ export default function VideoCard({ index, delay = 0, title, url, thumbnailId }:
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay }}
             whileHover={{ scale: 1.03 }}
-            onClick={() => window.open(url, "_blank")}
+            onMouseEnter={playHover}
+            onClick={() => {
+                playClick();
+                window.open(url, "_blank");
+            }}
         >
             {/* Thumbnail */}
             <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">

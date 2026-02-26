@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useSound } from "@/context/SoundContext";
 
 const events = [
     "Sector Farm: High value target spotted",
@@ -16,13 +17,21 @@ const events = [
 
 export default function LiveFeed() {
     const [index, setIndex] = useState(0);
+    const { playTyping } = useSound();
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setIndex((prev) => (prev + 1) % events.length);
+            setIndex((prev) => {
+                // We play sound when index changes
+                // small delay to sync with animation
+                setTimeout(() => {
+                    for (let i = 0; i < 3; i++) setTimeout(playTyping, i * 50);
+                }, 100);
+                return (prev + 1) % events.length;
+            });
         }, 4000);
         return () => clearInterval(timer);
-    }, []);
+    }, [playTyping]);
 
     return (
         <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-widest text-amber-500/60">

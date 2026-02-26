@@ -2,19 +2,26 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 export default function ThermalToggle() {
     const [isActive, setIsActive] = useState(false);
+
+    const { playActivate, playHover } = useSound();
 
     const toggle = () => {
         const next = !isActive;
         setIsActive(next);
         document.documentElement.classList.toggle("thermal", next);
+
+        // Play sound if turning on
+        if (next) playActivate();
     };
 
     return (
         <motion.button
             onClick={toggle}
+            onMouseEnter={playHover}
             className="fixed right-4 top-4 z-[60] border border-amber-500/40 bg-[#0f0f0f]/90 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-amber-500 backdrop-blur-sm transition-colors hover:border-amber-400 hover:bg-amber-500/10"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

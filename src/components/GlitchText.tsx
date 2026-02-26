@@ -2,19 +2,22 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useSound } from "@/context/SoundContext";
 
 export default function GlitchText({ text, className = "" }: { text: string; className?: string }) {
     const [glitch, setGlitch] = useState(false);
+    const { playGlitch } = useSound();
 
     useEffect(() => {
         const interval = setInterval(() => {
             if (Math.random() > 0.95) {
                 setGlitch(true);
+                playGlitch();
                 setTimeout(() => setGlitch(false), 150);
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [playGlitch]);
 
     return (
         <span className={`relative inline-block ${className}`}>

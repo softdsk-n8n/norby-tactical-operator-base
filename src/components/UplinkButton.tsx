@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSound } from "@/context/SoundContext";
 
 interface UplinkButtonProps {
     label: string;
@@ -10,9 +11,13 @@ interface UplinkButtonProps {
 }
 
 export default function UplinkButton({ label, href, icon, delay = 0 }: UplinkButtonProps) {
+    const { playHover, playClick } = useSound();
+
     return (
         <motion.a
             href={href}
+            onClick={playClick}
+            onMouseEnter={playHover}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative flex items-center justify-center gap-3 border border-amber-500/30 bg-[#0f0f0f] px-6 py-4 font-mono text-sm uppercase tracking-widest text-amber-500 transition-all hover:border-amber-400 hover:bg-amber-500/10 hover:text-amber-400"

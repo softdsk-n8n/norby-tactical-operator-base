@@ -99,8 +99,57 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }) => {
     }, [playOscillator]);
 
     const playTyping = useCallback(() => {
-        playOscillator("square", 1500 + Math.random() * 500, 0.03, 0.015); // Fast random high-pitched ticks
-    }, [playOscillator]);
+        if (isMuted || !audioCtxRef.current) return;
+        const ctx = audioCtxRef.current;
+
+        // Mechanical keyboard / Typewriter click simulation
+        const time = ctx.currentTime;
+
+        // 1. Transient click (noise)
+        const bufferSize = ctx.sampleRate * 0.015; // 15ms
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = "highpass";
+        noiseFilter.frequency.value = 1000;
+
+        const noiseGain = ctx.createGain();
+        // Vary volume slightly for realism
+        const vol = 0.05 + Math.random() * 0.02;
+        noiseGain.gain.setValueAtTime(vol, time);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.015);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(time);
+
+        // 2. Thock/Resonance (low percussive impact)
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+
+        osc.type = "triangle";
+        // Base frequency 150-200Hz, dropping quickly
+        const pitch = 150 + Math.random() * 50;
+        osc.frequency.setValueAtTime(pitch, time);
+        osc.frequency.exponentialRampToValueAtTime(50, time + 0.02);
+
+        oscGain.gain.setValueAtTime(0.04, time);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+
+        osc.start(time);
+        osc.stop(time + 0.02);
+    }, [isMuted]);
 
     const playGlitch = useCallback(() => {
         playNoise(0.2, 0.08); // Radio static burst

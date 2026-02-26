@@ -17,6 +17,7 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export const SoundProvider = ({ children }: { children: React.ReactNode }) => {
     const [isMuted, setIsMuted] = useState(true); // Default muted due to browser autoplay policies
     const audioCtxRef = useRef<AudioContext | null>(null);
+    const droneNodesRef = useRef<{ oscs: OscillatorType[]; gains: GainNode[]; lfos: OscillatorType[]; mainGain: GainNode } | null>(null);
 
     // Initialize Audio Context on first interaction
     const initAudio = () => {
@@ -26,14 +27,96 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const startDrone = useCallback(() => {
+        if (!audioCtxRef.current || droneNodesRef.current) return;
+
+        const ctx = audioCtxRef.current;
+        const mainGain = ctx.createGain();
+        mainGain.gain.setValueAtTime(0, ctx.currentTime);
+        // Fade in the drone slowly over 3 seconds
+        mainGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 3);
+        mainGain.connect(ctx.destination);
+
+        // We will create 3 layers:
+        // 1. Deep sub bass (stable)
+        // 2. Mid-low hum (drifting pitch/volume)
+        // 3. Higher harmonic (drifting pitch/volume)
+
+        const layers = [
+            { type: "sine" as const, baseFreq: 55, modFreq: 0.1, modDepth: 5 }, // ~A1 sub
+            { type: "triangle" as const, baseFreq: 110, modFreq: 0.05, modDepth: 10 }, // ~A2 
+            { type: "sine" as const, baseFreq: 165, modFreq: 0.02, modDepth: 15 } // ~E3
+        ];
+
+        const activeOscs: any[] = [];
+        const activeLfos: any[] = [];
+        const activeGains: GainNode[] = [];
+
+        layers.forEach((layer) => {
+            const osc = ctx.createOscillator();
+            osc.type = layer.type;
+            osc.frequency.setValueAtTime(layer.baseFreq, ctx.currentTime);
+
+            // Create LFO for pitch drifting
+            const lfoFreq = ctx.createOscillator();
+            lfoFreq.type = "sine";
+            lfoFreq.frequency.setValueAtTime(layer.modFreq, ctx.currentTime);
+            const lfoFreqGain = ctx.createGain();
+            lfoFreqGain.gain.setValueAtTime(layer.modDepth, ctx.currentTime);
+            lfoFreq.connect(lfoFreqGain);
+            lfoFreqGain.connect(osc.frequency);
+
+            // Layer specific volume balancing
+            const layerGain = ctx.createGain();
+            layerGain.gain.setValueAtTime(1 / layers.length, ctx.currentTime);
+
+            osc.connect(layerGain);
+            layerGain.connect(mainGain);
+
+            osc.start();
+            lfoFreq.start();
+
+            activeOscs.push(osc);
+            activeLfos.push(lfoFreq);
+            activeGains.push(layerGain);
+        });
+
+        droneNodesRef.current = { oscs: activeOscs, gains: activeGains, lfos: activeLfos, mainGain };
+    }, []);
+
+    const stopDrone = useCallback(() => {
+        if (!audioCtxRef.current || !droneNodesRef.current) return;
+
+        const { mainGain, oscs, lfos } = droneNodesRef.current;
+
+        // Fade out over 2 seconds
+        mainGain.gain.setValueAtTime(mainGain.gain.value, audioCtxRef.current.currentTime);
+        mainGain.gain.linearRampToValueAtTime(0, audioCtxRef.current.currentTime + 2);
+
+        // Stop nodes after fade out
+        setTimeout(() => {
+            oscs.forEach(o => { try { (o as any).stop() } catch (e) { } });
+            lfos.forEach(l => { try { (l as any).stop() } catch (e) { } });
+            mainGain.disconnect();
+        }, 2100);
+
+        droneNodesRef.current = null;
+    }, []);
+
     useEffect(() => {
         if (!isMuted) {
             initAudio();
             if (audioCtxRef.current?.state === "suspended") {
                 audioCtxRef.current.resume();
             }
+            startDrone();
+        } else {
+            stopDrone();
         }
-    }, [isMuted]);
+
+        // Cleanup on unmount
+        return () => stopDrone();
+    }, [isMuted, startDrone, stopDrone]);
 
     // Synthesis Helper: Oscillator
     const playOscillator = useCallback((type: OscillatorType, frequency: number, duration: number, vol = 0.1) => {
@@ -178,13 +261,17 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }) => {
         osc.stop(ctx.currentTime + 0.8);
     }, [isMuted]);
 
-    const toggleMute = () => {
-        setIsMuted(!isMuted);
-        if (isMuted) {
-            // It was muted, now activating
-            playActivate();
-        }
-    };
+    const toggleMute = useCallback(() => {
+        setIsMuted(prev => {
+            const willBeMuted = !prev;
+            if (!willBeMuted) {
+                // It wasn't muted, now activating
+                // Small timeout to let state update and ctx initialize
+                setTimeout(playActivate, 50);
+            }
+            return willBeMuted;
+        });
+    }, [playActivate]);
 
     return (
         <SoundContext.Provider value={{ isMuted, toggleMute, playHover, playClick, playTyping, playGlitch, playActivate }}>
